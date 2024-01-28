@@ -4,3 +4,4 @@
 */
 #macro CDC_DEFAULT_UNIT time_source_units_seconds
 #macro CDC_DEBUG true
+#macro CDC_TIME_SOURCE_DEFAULT time_source_global

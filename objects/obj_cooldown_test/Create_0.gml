@@ -1,17 +1,20 @@
-cooldown_manager = new CDC_CooldownManager();
+cooldown_manager = new CDC_Manager();
 
-temp = "hello";
-show_debug_message(temp);
+can_ability = true;
 
-cooldown_manager.add("test",
+cooldown_manager.add("ability",
 {
 	period: 2,
+	on_start: function()
+	{
+		can_ability = false;		
+		sprite_index = spr_cd_not_ready;
+	},
 	on_end: function ()
 	{
-		temp = "goodbye";
+		can_ability = true;
+		sprite_index = spr_cd_ready;
 	}
 });
 
 
-show_debug_message(temp);
-cooldown_manager.destroy();

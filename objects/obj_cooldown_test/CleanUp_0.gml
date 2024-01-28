@@ -1,0 +1,1 @@
+cooldown_manager.destroy();
