@@ -4,17 +4,19 @@ can_ability = true;
 
 cooldown_manager.add("ability",
 {
-	period: 2,
+	duration: 2,
 	on_start: function()
 	{
+		show_debug_message("start");
 		can_ability = false;		
 		sprite_index = spr_cd_not_ready;
 	},
 	on_end: function ()
 	{
+		show_debug_message("end");
 		can_ability = true;
 		sprite_index = spr_cd_ready;
 	}
 });
 
-
+show_debug_message(cooldown_manager);
