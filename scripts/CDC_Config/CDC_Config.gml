@@ -2,6 +2,11 @@
 	Cooldown Control
 	Author: Darcy Shaw
 */
-#macro CDC_DEFAULT_UNIT time_source_units_seconds
-#macro CDC_DEBUG true
-#macro CDC_TIME_SOURCE_DEFAULT time_source_global
+#macro __CDC_DEFAULT_TIME_SOURCE_UNIT time_source_units_seconds
+#macro __CDC_DEFAULT_TIME_SOURCE time_source_global
+
+#macro __CDC_DEFAULT_CDR_TYPE CDC_CDR_TYPE.PERCENT
+#macro __CDC_DEFAULT_CDR_FACTOR 0.1 
+#macro __CDC_DEFAULT_DURATION 1	
+
+#macro __CDC_DEBUG true

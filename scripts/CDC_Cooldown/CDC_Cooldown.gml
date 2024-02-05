@@ -14,7 +14,9 @@ function CDC_Cooldown() constructor
 	__units = undefined;	// Unit of Time (seconds or frames)
 	__state = CDC_STATE.READY;	// Current State of the Cooldown
 	__ts = undefined;		// Time source
-	__cdr = undefined;		// Cooldown Reduction
+	__cdr_type = undefined;		// Cooldown Reduction Type: Flat, Flat Percent, Exponential, Multiplicative
+	__cdr_factor = undefined;	// The amount of reduction per stack of CDR (ex. 0.10, 0.45)
+	__cdr_stacks = 0;	// The amount of stacks of the CDR factor
 	
 	toString = function()
 	{
@@ -36,7 +38,9 @@ function CDC_Manager() constructor
 	/// @param {Function}	_on_end		Function to execute on end
 	/// @param {Real}		_duration	Cooldown Time in (_units)
 	/// @param {Real}		_units		Unit of Time (seconds or frames)
-	__add = function(_name, _on_start, _on_end, _duration, _units) 
+	/// @param {Real}		_cdr_type	Type of Cooldown Reduction calculation for this CD
+	/// @param {Real}		_cdr_factor	The amount of cooldown to reduce. (Per stack, if using EXPO or MULT CDR scaling)
+	__add = function(_name, _on_start, _on_end, _duration, _units, _cdr_type, _cdr_factor) 
 	{
 		var _start, _end, _cooldown;
 		_cooldown = new CDC_Cooldown();
@@ -50,10 +54,12 @@ function CDC_Manager() constructor
 		_cooldown.__name = _name;
 		_cooldown.__units = _units;
 		_cooldown.__duration = _duration;
+		_cooldown.__cdr_type = _cdr_type;
+		_cooldown.__cdr_factor = _cdr_factor;
 		
 		with _cooldown
 		{
-			__ts = time_source_create(CDC_TIME_SOURCE_DEFAULT, __duration, __units, function()
+			__ts = time_source_create(__CDC_DEFAULT_TIME_SOURCE, __duration, __units, function()
 			{
 				__on_end();	
 				__state = CDC_STATE.READY;
@@ -69,7 +75,7 @@ function CDC_Manager() constructor
 		var _on_start = undefined;
 		var _on_end = undefined;
 		
-		var _duration, _units;
+		var _duration, _units, _cdr_type, _cdr_factor;
 		var _properties = struct_get_names(_cooldown_struct);
 		
 		// Iterate and add custom function events
@@ -84,10 +90,12 @@ function CDC_Manager() constructor
 			if (_property_name == "on_end") _on_end = _property;
 		}
 		
-		_duration = (struct_exists(_cooldown_struct, "duration")) ? struct_get(_cooldown_struct, "duration") : 1;
-		_units = (struct_exists(_cooldown_struct, "units")) ? struct_get(_cooldown_struct, "units") : CDC_DEFAULT_UNIT;
+		_duration = (struct_exists(_cooldown_struct, "duration")) ? struct_get(_cooldown_struct, "duration") : CDC_DEFAULT_DURATION;
+		_units = (struct_exists(_cooldown_struct, "units")) ? struct_get(_cooldown_struct, "units") : __CDC_DEFAULT_TIME_SOURCE_UNIT;
+		_cdr_type = (struct_exists(_cooldown_struct, "cdr_type")) ? struct_get(_cooldown_struct, "cdr_type") : __CDC_DEFAULT_CDR_TYPE;
+		_cdr_factor = (struct_exists(_cooldown_struct, "cdr_factor")) ? struct_get(_cooldown_struct, "cdr_factor") : __CDC_DEFAULT_CDR_FACTOR;
 		
-		__add(_name, _on_start, _on_end, _duration, _units);
+		__add(_name, _on_start, _on_end, _duration, _units, _cdr_type, _cdr_factor);
 	}
 	
 	/**
@@ -349,6 +357,29 @@ function CDC_Manager() constructor
 	}
 }
 
+function __get_cdr_flat(_duration, _val) 
+{
+	return max(MIN_CD_DURATION, _duration - _val);
+}
+
+function __get_cdr_percent(_duration, _percent) 
+{
+	var _new_duration = _duration - (_duration * _percent);
+	return max(MIN_CD_DURATION, _new_duration);
+}
+
+function __get_cdr_exponential(_duration, _factor, _stacks) 
+{
+	var _new_duration = _duration * exp((-1 * _factor) * _stacks);
+	return max(MIN_CD_DURATION, _new_duration);
+}
+
+function __get_cdr_multiplicative(_duration, _factor, _stacks) 
+{
+	var _new_duration = _duration * power((1 - _factor), _stacks);
+	return max(MIN_CD_DURATION, _new_duration);	
+}
+
 enum CDC_STATE
 {
 	NOT_READY,	// Cooldown is active and ticking down
@@ -357,4 +388,20 @@ enum CDC_STATE
 	BLOCKING	// Cooldown is active, but timer is not started. Useful for disallowing an ability after cast but not starting the cooldown timer till the ability has finished (animating etc.).
 }
 
+enum CDC_CDR_TYPE
+{
+	FLAT,
+	PERCENT,
+	EXPO,		// Exponential Reduction
+	MULT		// Multiplicative Reduction
+}
 
+#macro MIN_CD_DURATION 0.001
+
+//var _duration = 20;
+//var _stacks = 3;
+//var _factor = 0.5;
+//show_debug_message("flat: {0}", __get_cdr_flat(_duration, _factor));
+//show_debug_message("percent: {0}", __get_cdr_percent(_duration, _factor));
+//show_debug_message("exp: {0}", __get_cdr_exponential(_duration, _factor, _stacks));
+//show_debug_message("mult: {0}", __get_cdr_multiplicative(_duration, _factor, _stacks));

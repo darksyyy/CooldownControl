@@ -5,6 +5,8 @@ can_ability = true;
 cooldown_manager.add("ability",
 {
 	duration: 2,
+	cdr_type: CDC_CDR_TYPE.EXPO,
+	cdr_factor: 0.33,
 	on_start: function()
 	{
 		show_debug_message("start");
