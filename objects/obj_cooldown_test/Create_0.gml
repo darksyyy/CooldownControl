@@ -1,3 +1,4 @@
+//show_debug_overlay(true);
 cooldown_manager = new CDC_Manager();
 
 can_ability = true;
@@ -15,10 +16,18 @@ cooldown_manager.add("ability",
 	},
 	on_end: function ()
 	{
-		show_debug_message("end");
+		show_debug_message("endddddd");
 		can_ability = true;
 		sprite_index = spr_cd_ready;
 	}
 });
 
-show_debug_message(cooldown_manager);
+//for (var _i = 0; _i < 1000; _i++)
+//{
+//	cooldown_manager.add(string($"ability{_i}"), {});
+//}
+
+alive = true;
+
+
+//show_debug_message(cooldown_manager);
